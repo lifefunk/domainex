@@ -8,6 +8,8 @@ defmodule Domainex do
   - a helper for common domain value objects
   - a helper for common domain needs
   """
+  alias Domainex.Aggregate
+
   @typep error_type :: String.t() | atom()
 
   @typep error_payload ::
@@ -78,21 +80,38 @@ defmodule Domainex do
   @type result :: success() | error()
 
   @typedoc """
+  An `event_name()` used to give a name to some event
+  """
+  @type event_name :: atom()
+
+  @typedoc """
+  An `event_payload()` used for payload for some event, it can
+  be a `struct()` or `map()`.
+  """
+  @type event_payload :: struct() | map()
+
+  @typedoc """
+  An `event()` will used at aggregate. An aggregate will trigger / emit
+  an event for each domain activity already processed.
+  """
+  @type event :: {:event, {event_name(), event_payload()}}
+
+  @typedoc """
   An `aggregate_name` used to define the business needs behind an `aggregate`.
   """
   @type aggregate_name :: String.t() | atom()
 
   @typedoc """
-  An `aggregate_payload()` used to store a single `struct()` or a list of `struct()`. A `struct()` used as a
-  representation of some entities.
+  An `aggregate_payload()` should be a
   """
-  @type aggregate_payload ::
-    struct()
-    | list(struct())
+  @type aggregate_payload :: Aggregate.Structure.t()
 
   @typedoc """
   An `aggregate` in DDD actually is a cluster of *objects*, it possible to be a single entity, or a group
-  of entities. The definition of *object* here is just a simple `struct()`
+  of entities. The definition of *object* here is just a simple `struct()`.
+
+  This type of `aggregate()`, already set the `aggregate_payload()` to using `DomainEx.Aggregate.Structure`
+  as main data structure.
   """
   @type aggregate :: {:aggregate, {aggregate_name(), aggregate_payload()}}
 end
