@@ -33,10 +33,7 @@ Although Elixir is not a static type language, we are still possible to modeling
 
 ```elixir
   @type aggregate_name :: String.t() | atom()
-  @type aggregate_payload ::
-    struct()
-    | list(struct())
-
+  @type aggregate_payload :: Aggregate.Structure.t()
   @type aggregate :: {:aggregate, {aggregate_name(), aggregate_payload()}}
 ```
 
