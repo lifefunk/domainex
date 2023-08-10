@@ -37,5 +37,9 @@ defmodule Domainex.CommonTest do
     test "invalid result" do
       assert !Common.is_tuple_has_context?({:test}, :testing)
     end
+
+    test "empty tuple should be false" do
+      assert !Common.is_tuple_has_context?({}, :testing)
+    end
   end
 end
