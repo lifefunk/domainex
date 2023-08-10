@@ -1,7 +1,7 @@
 # Domainex
 
 `DomainEx` is an Elixir library which provides a set of common typespec and domain models and also provides
-a set of function helpers to for basic function and domain building  
+a set of function helpers for basic function and domain building  
 
 ## About Domainex
 
