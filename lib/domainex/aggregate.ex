@@ -143,7 +143,7 @@ defmodule Domainex.Aggregate do
   The `update_entity/3` need a `key` to update some entity, since an aggregate that contains multiple
   entities will be mapped based on some unique key
   """
-  @spec update_entity(data :: tuple(), key :: atom() , entity :: struct()) :: BaseType.result()
+  @spec update_entity(data :: BaseType.aggregate(), key :: atom() , entity :: struct()) :: BaseType.result()
   def update_entity(data, key, entity) when is_tuple(data) and is_atom(key) and is_struct(entity) do
     with true <- is_aggregate?(data),
          {:ok, agg_name} <- Common.extract_element_from_tuple(data, 1),
