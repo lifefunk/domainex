@@ -7,6 +7,11 @@ defmodule Domainex.Event do
   alias Domainex, as: BaseType
   alias Domainex.Common
 
+  @error_invalid_event_type "invalid event type"
+
+  @spec error_invalid_event_type() :: binary()
+  def error_invalid_event_type, do: @error_invalid_event_type
+
   defmodule Structure do
     @moduledoc """
     Event.Structure used to grouping all necessary properties for the
@@ -64,14 +69,34 @@ defmodule Domainex.Event do
   def is_event?(_), do: false
 
   @doc """
-  `payload/1` used to extract event's base structure from given event's tuple
+  `payload/1` used to extract event's payload from given event's tuple
   """
-  @spec payload(event :: tuple()) :: BaseType.result()
+  @spec payload(event :: BaseType.event()) :: BaseType.result()
   def payload(event) when is_tuple(event) do
-    with {:ok, event_payload} <- Common.extract_element_from_tuple(event, 1) do
-      {:ok, event_payload}
+    with  true <- is_event?(event),
+          {:ok, structure} <- Common.extract_element_from_tuple(event, 1)
+    do
+      {:ok, structure.payload}
     else
-      error -> error
+      false -> {:error, {:event, @error_invalid_event_type}}
+      {:error, {error_type, error_msg}} -> {:error, {error_type, error_msg}}
     end
   end
+  def payload(_), do: {:error, {:event, @error_invalid_event_type}}
+
+  @doc """
+  `structure/1` used to extract base event's structure
+  """
+  @spec structure(event :: BaseType.event()) :: BaseType.result()
+  def structure(event) when is_tuple(event) do
+    with  true <- is_event?(event),
+          {:ok, event} <- Common.extract_element_from_tuple(event, 1)
+    do
+      {:ok, event}
+    else
+      false -> {:error, {:event, @error_invalid_event_type}}
+      {:error, {error_type, error_msg}} -> {:error, {error_type, error_msg}}
+    end
+  end
+  def structure(_), do: {:error, {:event, @error_invalid_event_type}}
 end
