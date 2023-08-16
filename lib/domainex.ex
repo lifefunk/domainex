@@ -9,6 +9,7 @@ defmodule Domainex do
   - a helper for common domain needs
   """
   alias Domainex.Aggregate
+  alias Domainex.Event
 
   @typep error_type :: String.t() | atom()
 
@@ -94,7 +95,7 @@ defmodule Domainex do
   An `event()` will used at aggregate. An aggregate will trigger / emit
   an event for each domain activity already processed.
   """
-  @type event :: {:event, {event_name(), event_payload()}}
+  @type event :: {:event, Event.Structure.t()}
 
   @typedoc """
   An `aggregate_name` used to define the business needs behind an `aggregate`.
