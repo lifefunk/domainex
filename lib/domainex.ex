@@ -105,7 +105,7 @@ defmodule Domainex do
   @typedoc """
   An `aggregate_payload()` should be a
   """
-  @type aggregate_payload :: Aggregate.Structure.t()
+  @type aggregate_payload :: struct() | map()
 
   @typedoc """
   An `aggregate` in DDD actually is a cluster of *objects*, it possible to be a single entity, or a group
@@ -114,5 +114,5 @@ defmodule Domainex do
   This type of `aggregate()`, already set the `aggregate_payload()` to using `DomainEx.Aggregate.Structure`
   as main data structure.
   """
-  @type aggregate :: {:aggregate, {aggregate_name(), aggregate_payload()}}
+  @type aggregate :: {:aggregate, Aggregate.Structure.t()}
 end

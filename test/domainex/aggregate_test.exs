@@ -12,30 +12,28 @@ defmodule Domainex.AggregateTest do
   describe "new/1" do
     test "with single entity" do
       fake_entity = %FakeEntityStruct{name: "fake_entity"}
-      aggregate = Aggregate.new(fake_entity, :fake_entity)
+      aggregate = Aggregate.new(:fake_entity, fake_entity)
 
       assert is_tuple(aggregate)
       assert elem(aggregate, 0) == :aggregate
-      assert is_tuple(elem(aggregate, 1))
-      assert elem(elem(aggregate, 1), 0) == :fake_entity
-      assert is_struct(elem(elem(aggregate, 1), 1))
+      assert elem(aggregate, 1).name == :fake_entity
+      assert is_struct(elem(aggregate, 1))
 
-      agg_object = elem(elem(aggregate, 1), 1)
+      agg_object = elem(aggregate, 1)
       assert agg_object.contains == fake_entity
     end
 
     test "with map of entities" do
       fake_entity_1 = %FakeEntityStruct{name: "fake_entity_1"}
       fake_entity_2 = %FakeEntityStruct{name: "fake_entity_2"}
-      aggregate = Aggregate.new(%{:fake1 => fake_entity_1, :fake2 => fake_entity_2}, :fake_agg)
+      aggregate = Aggregate.new(:fake_agg, %{:fake1 => fake_entity_1, :fake2 => fake_entity_2})
 
       assert is_tuple(aggregate)
       assert elem(aggregate, 0) == :aggregate
-      assert is_tuple(elem(aggregate, 1))
-      assert elem(elem(aggregate, 1), 0) == :fake_agg
-      assert is_struct(elem(elem(aggregate, 1), 1))
+      assert elem(aggregate, 1).name == :fake_agg
+      assert is_struct(elem(aggregate, 1))
 
-      agg_object = elem(elem(aggregate, 1), 1)
+      agg_object = elem(aggregate, 1)
       agg_fake_1 = agg_object.contains.fake1
       agg_fake_2 = agg_object.contains.fake2
 
@@ -47,7 +45,7 @@ defmodule Domainex.AggregateTest do
   describe "is_aggregate?/1" do
     test "with correct tuple type" do
       fake_entity = %FakeEntityStruct{name: "fake_entity"}
-      aggregate = Aggregate.new(fake_entity, :fake_entity)
+      aggregate = Aggregate.new(:fake_entity, fake_entity)
       assert Aggregate.is_aggregate?(aggregate)
     end
 
@@ -63,7 +61,7 @@ defmodule Domainex.AggregateTest do
   describe "aggregate/1" do
     test "using valid type" do
       fake_entity = %FakeEntityStruct{name: "fake_entity"}
-      aggregate = Aggregate.new(fake_entity, :fake_entity)
+      aggregate = Aggregate.new(:fake_entity, fake_entity)
       {:ok, structure} = aggregate |> Aggregate.aggregate
 
       assert structure.contains == fake_entity
@@ -92,7 +90,7 @@ defmodule Domainex.AggregateTest do
     test "should be success" do
       fake_entity = %FakeEntityStruct{name: "fake_entity"}
       fake_entity_updated = %FakeEntityStruct{name: "fake_entity_updated"}
-      aggregate = Aggregate.new(fake_entity, :fake_entity)
+      aggregate = Aggregate.new(:fake_entity, fake_entity)
 
       {:ok, structure} = aggregate |> Aggregate.aggregate
       assert structure.contains == fake_entity
@@ -127,7 +125,7 @@ defmodule Domainex.AggregateTest do
     test "should be success" do
       fake_entity_1 = %FakeEntityStruct{name: "fake_entity"}
       fake_entity_2 = %FakeEntityStruct{name: "fake_entity_updated"}
-      aggregate = Aggregate.new(%{:fake1 => fake_entity_1, :fake2 => fake_entity_2}, :entities)
+      aggregate = Aggregate.new(:entities, %{:fake1 => fake_entity_1, :fake2 => fake_entity_2})
 
       {:ok, structure} = aggregate |> Aggregate.aggregate
       assert structure.contains.fake1 == fake_entity_1

@@ -34,11 +34,12 @@ defmodule Domainex.Aggregate do
     An aggregate may contains a single entity object or a group of entities.
     An aggregate also should responsible to emit an event for each domain activities
     """
-    @enforce_keys [:contains, :events]
-    defstruct [:contains, :events]
+    @enforce_keys [:name, :contains, :events]
+    defstruct [:name, :contains, :events]
 
     @type t :: %__MODULE__{
-      contains: struct() | %{atom() => struct()},
+      name: BaseType.aggregate_name(),
+      contains: BaseType.aggregate_payload() | %{atom() => BaseType.aggregate_payload()},
       events: list(BaseType.event())
     }
   end
@@ -54,24 +55,26 @@ defmodule Domainex.Aggregate do
 
   All generated structure will always generated with an empty `:events`
   """
-  @spec new(entity :: struct(), name :: atom()) :: BaseType.aggregate()
-  def new(entity, name) when is_struct(entity) and is_atom(name) or is_binary(name) do
+  @spec new(entity :: BaseType.aggregate_payload(), name :: BaseType.aggregate_name()) :: BaseType.aggregate()
+  def new(name, entity) when is_struct(entity) and is_atom(name) or is_binary(name) do
     aggregate = %Structure{
+      name: name,
       contains: entity,
       events: []
     }
 
-    {:aggregate, {name, aggregate}}
+    {:aggregate, aggregate}
   end
 
-  @spec new(entities :: %{atom() => struct()}, name :: atom()) :: BaseType.aggregate()
-  def new(entities, name) when is_map(entities) and is_atom(name) or is_binary(name) do
+  @spec new(entities :: %{atom() => BaseType.aggregate_payload()}, name :: BaseType.aggregate_name()) :: BaseType.aggregate()
+  def new(name, entities) when is_map(entities) and is_atom(name) or is_binary(name) do
     aggregate = %Structure{
+      name: name,
       contains: entities,
       events: []
     }
 
-    {:aggregate, {name, aggregate}}
+    {:aggregate, aggregate}
   end
 
   @doc """
@@ -95,8 +98,7 @@ defmodule Domainex.Aggregate do
   @spec aggregate(data :: BaseType.aggregate()) :: BaseType.result()
   def aggregate(data) when is_tuple(data) do
     with true <- is_aggregate?(data),
-         {:ok, tuple} <- Common.extract_element_from_tuple(data, 1),
-         {:ok, aggregate} <- Common.extract_element_from_tuple(tuple, 1)
+         {:ok, aggregate} <- Common.extract_element_from_tuple(data, 1)
     do
       {:ok, aggregate}
     else
@@ -119,11 +121,9 @@ defmodule Domainex.Aggregate do
   @spec update_entity(data :: BaseType.aggregate(), entity :: struct()) :: BaseType.result()
   def update_entity(data, entity) when is_tuple(data) and is_struct(entity) do
     with true <- is_aggregate?(data),
-         {:ok, tuple} <- Common.extract_element_from_tuple(data, 1),
-         {:ok, agg_name} <- Common.extract_element_from_tuple(tuple, 0),
-         {:ok, agg_object} <- data |> aggregate
+         {:ok, aggregate} <- Common.extract_element_from_tuple(data, 1)
     do
-      {:ok, {:aggregate, {agg_name, %{agg_object | contains: entity}}}}
+      {:ok, {:aggregate, %{aggregate | contains: entity}}}
     else
       false -> {:error, {:aggregate, "given data is not aggregate type"}}
       {:error, {error_type, error_msg}} -> {:error, {error_type, error_msg}}
@@ -146,10 +146,9 @@ defmodule Domainex.Aggregate do
   @spec update_entity(data :: BaseType.aggregate(), key :: atom() , entity :: struct()) :: BaseType.result()
   def update_entity(data, key, entity) when is_tuple(data) and is_atom(key) and is_struct(entity) do
     with true <- is_aggregate?(data),
-         {:ok, agg_name} <- Common.extract_element_from_tuple(data, 1),
-         {:ok, agg_object} <- data |> aggregate
+         {:ok, aggregate} <- Common.extract_element_from_tuple(data, 1)
     do
-      {:ok, {:aggregate, {agg_name, %{agg_object | contains: Map.put(agg_object.contains, key, entity)}}}}
+      {:ok, {:aggregate, %{aggregate | contains: Map.put(aggregate.contains, key, entity)}}}
     else
       false -> {:error, {:aggregate, "given data is not aggregate type"}}
       {:error, {error_type, error_msg}} -> {:error, {error_type, error_msg}}
