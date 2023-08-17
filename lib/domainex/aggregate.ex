@@ -116,6 +116,32 @@ defmodule Domainex.Aggregate do
   def aggregate(_), do: {:error, {:aggregate, @error_invalid_data_type}}
 
   @doc """
+  `entity/1` used to load current aggregate's `:contains` property, which expected result
+  is a single entity.
+  """
+  @spec entity(data :: BaseType.aggregate()) :: BaseType.result()
+  def entity(data) when is_tuple(data) do
+    case data |> aggregate do
+      {:ok, aggregate} ->
+        {:ok, aggregate.contains}
+      error ->
+        error
+    end
+  end
+  def entity(_), do: {:error, {:aggregate, @error_invalid_data_type}}
+
+  @doc """
+  `entities/1` used to load multiple entities. It just using `entity/1` under the hood.
+  If your current aggregate contains multiple entities, then it will all of that entities
+  in `map()` format.
+  """
+  @spec entities(data :: BaseType.aggregate()) :: BaseType.result()
+  def entities(data) when is_tuple(data) do
+    data |> entity
+  end
+  def entities(_), do: {:error, {:aggregate, @error_invalid_data_type}}
+
+  @doc """
   `update_entity/2` used to update internal aggregate's entity. This function used
   only for an aggregate with a single entity.
 
@@ -136,6 +162,7 @@ defmodule Domainex.Aggregate do
       {:error, {error_type, error_msg}} -> {:error, {error_type, error_msg}}
     end
   end
+  def update_entity(_, _), do: {:error, {:aggregate, @error_invalid_data_type}}
 
   @doc """
   `update_entity/3` used to update one of available entities. This function used for an aggregate
@@ -161,6 +188,7 @@ defmodule Domainex.Aggregate do
       {:error, {error_type, error_msg}} -> {:error, {error_type, error_msg}}
     end
   end
+  def update_entity(_, _, _), do: {:error, {:aggregate, @error_invalid_data_type}}
 
   @doc """
   `add_event/2` used to adding an event to current available events in some aggregate
@@ -174,6 +202,7 @@ defmodule Domainex.Aggregate do
         {:error, {error_type, error_msg}}
     end
   end
+  def add_event(_, _), do: {:error, {:aggregate, @error_invalid_data_type}}
 
   @doc """
   `emit_events/1` used to emit all current available events from an aggregate. All of available

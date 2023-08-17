@@ -97,6 +97,56 @@ defmodule Domainex.AggregateTest do
     end
   end
 
+  describe "entity/1" do
+    test "should be able to load a single entity" do
+      fake_entity = %FakeEntityStruct{name: "fake_entity"}
+      aggregate = Aggregate.new(:fake_entity, fake_entity, [FakeEventProcessor])
+      {:ok, entity} = aggregate |> Aggregate.entity
+
+      assert entity == fake_entity
+    end
+
+    test "should be error with invalid aggregate type" do
+      {:error, {error_type, error_msg}} = {:invalid} |> Aggregate.entity
+
+      assert error_type == :aggregate
+      assert error_msg == Aggregate.error_invalid_aggregate_type()
+    end
+
+    test "should be error with given data type" do
+      {:error, {error_type, error_msg}} = 1 |> Aggregate.entity
+
+      assert error_type == :aggregate
+      assert error_msg == Aggregate.error_invalid_data_type
+    end
+  end
+
+  describe "entities/1" do
+    test "should be able to load multiple entities" do
+      fake_entity_1 = %FakeEntityStruct{name: "fake_entity"}
+      fake_entity_2 = %FakeEntityStruct{name: "fake_entity_updated"}
+      aggregate = Aggregate.new(:entities, %{:fake1 => fake_entity_1, :fake2 => fake_entity_2}, [FakeEventProcessor])
+
+      {:ok, entities} = aggregate |> Aggregate.entities
+      assert entities |> Map.has_key?(:fake1)
+      assert entities |> Map.has_key?(:fake2)
+    end
+
+    test "should be error with invalid aggregate type" do
+      {:error, {error_type, error_msg}} = {:invalid} |> Aggregate.entities
+
+      assert error_type == :aggregate
+      assert error_msg == Aggregate.error_invalid_aggregate_type()
+    end
+
+    test "should be error with given data type" do
+      {:error, {error_type, error_msg}} = 1 |> Aggregate.entities
+
+      assert error_type == :aggregate
+      assert error_msg == Aggregate.error_invalid_data_type
+    end
+  end
+
   describe "update_entity/2" do
     test "should be success" do
       fake_entity = %FakeEntityStruct{name: "fake_entity"}
@@ -129,6 +179,14 @@ defmodule Domainex.AggregateTest do
       {:error, {error_type, error_message}} = Aggregate.update_entity({:aggregate}, fake_entity)
       assert error_type == :exception
       assert String.contains?(error_message, "out of range")
+    end
+
+    test "with invalid data type" do
+      fake_entity = %FakeEntityStruct{name: "fake_entity"}
+
+      {:error, {error_type, error_message}} = 1 |> Aggregate.update_entity(fake_entity)
+      assert error_type == :aggregate
+      assert error_message == Aggregate.error_invalid_data_type()
     end
   end
 
@@ -167,6 +225,14 @@ defmodule Domainex.AggregateTest do
       assert error_type == :exception
       assert String.contains?(error_msg, "out of range")
     end
+
+    test "with invalid data type" do
+      fake_entity_1 = %FakeEntityStruct{name: "fake_entity"}
+      {:error, {error_type, error_msg}} = Aggregate.update_entity(1, :fake, fake_entity_1)
+
+      assert error_type == :aggregate
+      assert error_msg == Aggregate.error_invalid_data_type()
+    end
   end
 
   describe "add_event/2" do
@@ -191,6 +257,13 @@ defmodule Domainex.AggregateTest do
       assert result == :error
       assert error_type == :aggregate
       assert error_msg == Aggregate.error_invalid_aggregate_type()
+    end
+
+    test "should be error when using invalid data type spec" do
+      {result, {error_type, error_msg}} = 1 |> Aggregate.add_event({:event})
+      assert result == :error
+      assert error_type == :aggregate
+      assert error_msg == Aggregate.error_invalid_data_type()
     end
   end
 
