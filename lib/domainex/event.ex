@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 defmodule Domainex.Event do
   @moduledoc """
   Event described on this module is specified for domain's event.

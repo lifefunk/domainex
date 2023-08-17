@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 defmodule Domainex.Aggregate do
   @moduledoc """
   Aggregate is a module provide base Aggregate module functions.

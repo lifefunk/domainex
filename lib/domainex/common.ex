@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 defmodule Domainex.Common do
 
   alias Domainex, as: BaseType

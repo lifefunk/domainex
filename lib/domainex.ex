@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 defmodule Domainex do
   @moduledoc """
   A `domainex` is an Elixir library which provides:
