@@ -3,9 +3,9 @@
 `DomainEx` is an Elixir library which provides a set of common typespec and domain models and also provides
 a set of function helpers for basic function and domain building  
 
-## About Domainex
+# About Domainex
 
-### Why TypeSpces
+## Why TypeSpces
 
 Elixir is not a static typing language, it's dynamic typing, which mean when we doesn't need to define any variable
 or function type parameters. But Elixir provides their `TypeSpecs` that really useful to: 
@@ -25,13 +25,13 @@ The `Domainex` provides common types such as:
   @type result :: success() | error()
 ```
 
-### Domain Driven Design
+## Domain Driven Design
 
 Although Elixir is not a static type language, we are still possible to modeling business needs by take a leverage of *typespec*.
 
 `Domainex` also build with purpose to provide a helpers and also *specs* to define some common DDD concepts.
 
-#### Aggregate
+### Aggregate
 
 ```elixir
   @type aggregate_name :: String.t() | atom()
@@ -68,7 +68,65 @@ Initiate new aggregate with multiple entities:
     aggregate = Aggregate.new(:fake_agg, %{:fake1 => fake_entity_1, :fake2 => fake_entity_2}, [FakeEventProcessor])
 ```
 
-#### Domain Event
+#### Aggregate and Functional Programming
+
+We should treat an `aggregate` as a *single unit* of business domain, which mean, we should put our business logic inside an `aggregate`. It is a common to create an *object* which in OOP will be a *class* that hold refences to its internal states and behaviors based on business needs. There is a chance that some of aggregates need some common states,properties or even activities, maybe something like emitting domain event. All of these common properties and behaviors can be grouped into some *base aggregate* which will be inherited by other child aggregates. 
+
+The problem is, I rarely see such a thing in functional languages, including in Elixir. There is no way to *extend* from some defined *structure* or a `struct()`.
+
+In functional, actually it help us to made all things becomes more simpler. There are no *internal states*, no *inheritance*. There are just an input parameters and a functions. An input parameter is just a *value* , and a function used to do some computation, transform a *value* to other *value*.
+
+```
+|-------|            |-----------|        |---------|
+| input | ---------> |  function |------->|  output |
+|-------|            |-----------|        |---------|
+```
+
+Even better, each of *value* is also *immutable* , so there is no chance that we can *update* the value directly, what we can do is create another new value based on some given values.
+
+If we can't *extend* this `aggregate()` type and structure, then how do we use it in our real application, real business needs ?
+
+There is no chance to *extend*, **but**, we can use this `DomainEx.Aggregate.Structure` as a *value*, and use all of available functions form `Domainex.Aggregate` as a helper functions, as long as the input value following spec: 
+
+```elixir
+  @type aggregate :: {:aggregate, Aggregate.Structure.t()}
+```
+
+You are still free to create your own `aggregate` based on your business needs, `Domainex` will not limiting the solution or force you to follow some rules.
+
+Example of possible solutions : 
+
+```elixir
+  defmodule My.Aggregate do
+    defmodule Structure do
+      # The `:base` property defined here used to store our `aggregate()` type
+      defstruct [:base, :field1, :field2]
+    end
+
+    @spec new(base :: Domainex.aggregate())
+    def new(base) do
+      %Structure{
+        base: base
+      }
+    end
+
+    @spec your_business_activity(structure :: Structure.t()) :: {:ok, term()} | {:error, term()}
+    def your_business_activity(structure) do
+      # do whatever you needs
+    end
+  end
+```
+
+So, the logic flow become like this: 
+
+```mermaid
+flowchart TD;
+  Start-->CreateBaseAggregate
+  CreateBaseAggregate-->|inject| CreateYourAggregate
+  CreateYourAggregate-->|result| YourOwnAggregate
+```
+
+### Domain Event
 
 ```elixir
   @type event_name :: atom()
@@ -97,7 +155,7 @@ some event's processor, like an example above.  An `Event.Processor` is a Elixir
 
 Each time you `emit_events/1` from an aggregate, it will send all available aggregate's event to its event's processor. Its up to the module which implement `Event.Processor` to do anything with given event list, maybe doing some computation using Elixir's `GenStage`.  
 
-### The power of Tuple
+## The power of Tuple
 
 When I learning Elixir, I've seen a lot of *tuple* used to grouping some context. Let just take our previous sample for return values : 
 
@@ -123,7 +181,7 @@ iex(3)> value
 iex(4)> 
 ```
 
-## Installation
+# Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
 by adding `domainex` to your list of dependencies in `mix.exs`:
