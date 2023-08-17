@@ -29,15 +29,73 @@ The `Domainex` provides common types such as:
 
 Although Elixir is not a static type language, we are still possible to modeling business needs by take a leverage of *typespec*.
 
-`Domainex` also build with purpose to provide a helpers and also *specs* to define some common DDD concepts, like aggregates: 
+`Domainex` also build with purpose to provide a helpers and also *specs* to define some common DDD concepts.
+
+#### Aggregate
 
 ```elixir
   @type aggregate_name :: String.t() | atom()
-  @type aggregate_payload :: Aggregate.Structure.t()
-  @type aggregate :: {:aggregate, {aggregate_name(), aggregate_payload()}}
+  @type aggregate_payload :: struct() | map()
+  @type aggregate :: {:aggregate, Aggregate.Structure.t()}
 ```
 
-By providing a *shortcut* for its *spec* , it can help us when modeling our business needs. 
+The main aggregate's structure will be like this: 
+
+```elixir
+    @enforce_keys [:name, :contains, :events, :processors]
+    defstruct [:name, :contains, :events, :processors]
+
+    @type t :: %__MODULE__{
+      name: BaseType.aggregate_name(),
+      contains: BaseType.aggregate_payload() | %{atom() => BaseType.aggregate_payload()},
+      events: list(BaseType.event()),
+      processors: list(module())
+    }
+```
+
+Initiate new aggregate: 
+
+```elixir
+    fake_entity = %FakeEntityStruct{name: "fake_entity"}
+    aggregate = Aggregate.new(:fake_entity, fake_entity, [FakeEventProcessor])
+```
+
+Initiate new aggregate with multiple entities:
+
+```elixir
+    fake_entity_1 = %FakeEntityStruct{name: "fake_entity_1"}
+    fake_entity_2 = %FakeEntityStruct{name: "fake_entity_2"}
+    aggregate = Aggregate.new(:fake_agg, %{:fake1 => fake_entity_1, :fake2 => fake_entity_2}, [FakeEventProcessor])
+```
+
+#### Domain Event
+
+```elixir
+  @type event_name :: atom()
+  @type event_payload :: struct() | map()
+  @type event :: {:event, Event.Structure.t()}
+```
+
+The main event's structure will be like this: 
+
+```elixir
+    @enforce_keys [:name, :payload, :timestamp]
+    defstruct [:name, :payload, :timestamp]
+
+    @type t :: %__MODULE__{
+      name: BaseType.event_name(),
+      payload: BaseType.event_payload(),
+      timestamp: DateTime.t()
+    }
+```
+
+By default you almost doesn't need to do anything with these domain event structure and even its *specs*. When you
+initiate a new aggregate, it will also initiate an empty events.
+
+Aggregate and domain events will follow `Observer` design pattern. When you initiate an aggregate, you need to register
+some event's processor, like an example above.  An `Event.Processor` is a Elixir's *behaviour*, or an *interface* called in other languages.
+
+Each time you `emit_events/1` from an aggregate, it will send all available aggregate's event to its event's processor. Its up to the module which implement `Event.Processor` to do anything with given event list, maybe doing some computation using Elixir's `GenStage`.  
 
 ### The power of Tuple
 
