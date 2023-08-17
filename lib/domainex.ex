@@ -1,7 +1,6 @@
 defmodule Domainex do
   @moduledoc """
   A `domainex` is an Elixir library which provides:
-
   - common elixir typespec models
   - common domain typespec models
   - a helper for functional dependencies
