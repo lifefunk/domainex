@@ -126,6 +126,8 @@ flowchart TD;
   CreateYourAggregate-->|result| YourOwnAggregate
 ```
 
+> Please remember, that since the `Domainex.Aggregate` which act as base aggregate used as a *value*, it needs to always be passed as a function parameters. 
+
 ### Domain Event
 
 ```elixir
