@@ -168,4 +168,64 @@ defmodule Domainex.AggregateTest do
       assert String.contains?(error_msg, "out of range")
     end
   end
+
+  describe "add_event/2" do
+    test "should be success to adding event" do
+      fake_entity = %FakeEntityStruct{name: "fake_entity"}
+      fake_event = %Event.Structure{
+        name: :fake_event,
+        payload: %{},
+        timestamp: DateTime.utc_now()
+      }
+
+      aggregate = Aggregate.new(:fake_entity, fake_entity, [FakeEventProcessor])
+      {result, aggregate} = aggregate |> Aggregate.add_event({:event, fake_event})
+
+      assert result == :ok
+      {:ok, updated} = aggregate |> Aggregate.aggregate
+      assert length(updated.events) == 1
+    end
+
+    test "should be error when using invalid aggregate spec" do
+      {result, {error_type, error_msg}} = {:invalid} |> Aggregate.add_event({:event})
+      assert result == :error
+      assert error_type == :aggregate
+      assert error_msg == Aggregate.error_invalid_aggregate_type()
+    end
+  end
+
+  describe "emit_events/1" do
+    test "should be success to emit all events" do
+      fake_entity = %FakeEntityStruct{name: "fake_entity"}
+      fake_event = %Event.Structure{
+        name: :fake_event,
+        payload: %{},
+        timestamp: DateTime.utc_now()
+      }
+
+      aggregate = Aggregate.new(:fake_entity, fake_entity, [FakeEventProcessor])
+      {result, aggregate} = aggregate |> Aggregate.add_event({:event, fake_event})
+      assert result == :ok
+
+      {result, aggregate} = aggregate |> Aggregate.emit_events
+      assert result == :ok
+
+      {:ok, updated} = aggregate |> Aggregate.aggregate
+      assert length(updated.events) == 0
+    end
+
+    test "should be error using invalid aggregate type" do
+      {result, {error_type, error_msg}} = {:invalid} |> Aggregate.emit_events
+      assert result == :error
+      assert error_type == :aggregate
+      assert error_msg == Aggregate.error_invalid_aggregate_type()
+    end
+
+    test "should be error invalid data type" do
+      {result, {error_type, error_msg}} = 1 |> Aggregate.emit_events
+      assert result == :error
+      assert error_type == :aggregate
+      assert error_msg == Aggregate.error_invalid_data_type()
+    end
+  end
 end

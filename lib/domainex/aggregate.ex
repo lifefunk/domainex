@@ -35,6 +35,8 @@ defmodule Domainex.Aggregate do
 
     An aggregate may contains a single entity object or a group of entities.
     An aggregate also should responsible to emit an event for each domain activities
+
+    Specific for `:processor`, it must be a module which implement behaviour `Event.Processor`
     """
     @enforce_keys [:name, :contains, :events, :processors]
     defstruct [:name, :contains, :events, :processors]
@@ -157,6 +159,45 @@ defmodule Domainex.Aggregate do
     else
       false -> {:error, {:aggregate, "given data is not aggregate type"}}
       {:error, {error_type, error_msg}} -> {:error, {error_type, error_msg}}
+    end
+  end
+
+  @doc """
+  `add_event/2` used to adding an event to current available events in some aggregate
+  """
+  @spec add_event(data :: BaseType.aggregate(), event :: BaseType.event()) :: BaseType.result()
+  def add_event(data, event) when is_tuple(data) and is_tuple(event) do
+    case data |> aggregate do
+      {:ok, agg} ->
+        {:ok, {:aggregate, %{agg | events: agg.events ++ [event]}}}
+      {:error, {error_type, error_msg}} ->
+        {:error, {error_type, error_msg}}
+    end
+  end
+
+  @doc """
+  `emit_events/1` used to emit all current available events from an aggregate. All of available
+  event will send to all registered processors, and after emitting events, we need to reset current
+  events to empty list.
+  """
+  @spec emit_events(data :: BaseType.aggregate()) :: BaseType.result()
+  def emit_events(data) when is_tuple(data) do
+    case data |> aggregate() do
+      {:ok, agg} ->
+        Enum.map(agg.processors, fn processor -> agg.events |> processor.process end)
+        data |> reset_events
+      {:error, {error_type, error_msg}} ->
+        {:error, {error_type, error_msg}}
+    end
+  end
+  def emit_events(_), do: {:error, {:aggregate, @error_invalid_data_type}}
+
+  defp reset_events(data) when is_tuple(data) do
+    case data |> aggregate do
+      {:ok, agg} ->
+        {:ok, {:aggregate, %{agg | events: []}}}
+      {:error, {error_type, error_msg}} ->
+        {:error, {error_type, error_msg}}
     end
   end
 end

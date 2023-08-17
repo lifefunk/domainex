@@ -60,10 +60,12 @@ defmodule Domainex.Event do
     """
 
     @doc """
-    `process/1` will got a list of available events from an aggregate, and will return `BaseType.result()`. It's
-    free for each module implementer how to manage all of these events.
+    `process/1` will got a list of available events from an aggregate, and will return `none()`. It's
+    free for each module implementer how to manage all of these events.  The `:aggregate` will not care
+    if it will be an `:ok` or an `:error`, this function should not return anything, or in other languages
+    it called as `void`, in Elixir I'm choosing `none()`.
     """
-    @callback process(events :: list(BaseType.event())) :: BaseType.result()
+    @callback process(events :: list(BaseType.event())) :: none()
   end
 
   @doc """
