@@ -27,20 +27,23 @@ defmodule Domainex.Aggregate do
     base data structure, although the function implementation it
     will always depends to some specific requirements and logics.
 
-    This structure provides only two possible keys, which are:
+    This structure provides only four possible keys, which are:
+    - :name
     - :contains
     - :events
+    - :processors
 
     An aggregate may contains a single entity object or a group of entities.
     An aggregate also should responsible to emit an event for each domain activities
     """
-    @enforce_keys [:name, :contains, :events]
-    defstruct [:name, :contains, :events]
+    @enforce_keys [:name, :contains, :events, :processors]
+    defstruct [:name, :contains, :events, :processors]
 
     @type t :: %__MODULE__{
       name: BaseType.aggregate_name(),
       contains: BaseType.aggregate_payload() | %{atom() => BaseType.aggregate_payload()},
-      events: list(BaseType.event())
+      events: list(BaseType.event()),
+      processors: list(module())
     }
   end
 
@@ -55,23 +58,25 @@ defmodule Domainex.Aggregate do
 
   All generated structure will always generated with an empty `:events`
   """
-  @spec new(entity :: BaseType.aggregate_payload(), name :: BaseType.aggregate_name()) :: BaseType.aggregate()
-  def new(name, entity) when is_struct(entity) and is_atom(name) or is_binary(name) do
+  @spec new(name :: BaseType.aggregate_name(), entity :: BaseType.aggregate_payload(), processors :: list(module())) :: BaseType.aggregate()
+  def new(name, entity, processors) when is_struct(entity) and is_atom(name) or is_binary(name) and is_list(processors) do
     aggregate = %Structure{
       name: name,
       contains: entity,
-      events: []
+      events: [],
+      processors: processors
     }
 
     {:aggregate, aggregate}
   end
 
-  @spec new(entities :: %{atom() => BaseType.aggregate_payload()}, name :: BaseType.aggregate_name()) :: BaseType.aggregate()
-  def new(name, entities) when is_map(entities) and is_atom(name) or is_binary(name) do
+  @spec new(name :: BaseType.aggregate_name(), entities :: %{atom() => BaseType.aggregate_payload()}, processors :: list(module())) :: BaseType.aggregate()
+  def new(name, entities, processors) when is_map(entities) and is_atom(name) or is_binary(name) and is_list(processors) do
     aggregate = %Structure{
       name: name,
       contains: entities,
-      events: []
+      events: [],
+      processors: processors
     }
 
     {:aggregate, aggregate}

@@ -46,6 +46,26 @@ defmodule Domainex.Event do
     }
   end
 
+  defmodule Processor do
+    @moduledoc """
+    A `Event.Processor` is an abstraction interface to process all emitted events from an aggregate.
+    I think it should be better to provide just a behaviour with a simple callback function and give
+    the freedom back to the caller for the detail how to manage all available events from an aggregate,
+    maybe using something like `GenStage` or others, depends on their business needs.
+
+    Each of module implement this behaviour should be registered on aggregate, following pattern `Observer`.
+    Each time aggregate emit all of available events, it will use registered event's processor and send all
+    events to its callback function, which is `process`.  The module may process all of events async or sync
+    and give the result back to the aggregate.
+    """
+
+    @doc """
+    `process/1` will got a list of available events from an aggregate, and will return `BaseType.result()`. It's
+    free for each module implementer how to manage all of these events.
+    """
+    @callback process(events :: list(BaseType.event())) :: BaseType.result()
+  end
+
   @doc """
   `new/2` used to generate new Event structure with given `name` and `payload`. The `payload` itself
   may be a `struct()` or `map()` depends on business logic needs.
